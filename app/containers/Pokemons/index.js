@@ -12,11 +12,11 @@ import { compose } from 'redux';
 
 import { useInjectSaga } from 'utils/injectSaga';
 import { useInjectReducer } from 'utils/injectReducer';
-import { queryPokemon } from './actions';
+import { queryPokemon, querySpecificPokemon } from './actions';
 import makeSelectPokemons from './selectors';
 import reducer from './reducer';
 import saga from './saga';
-import { Table, Badge, Menu, Dropdown, Icon } from 'antd';
+import { Table, Badge, Menu, Dropdown, Icon, Spin } from 'antd';
 import PokemonStats from 'components/PokemonStats'
 
 const columns = [
@@ -27,11 +27,11 @@ const columns = [
     render: sprites => {
       if (sprites) {
         return (
-          <img src={sprites.front_default} />
+          <img style={{width: '100px', height: '100px'}} src={sprites.front_default} />
         )
       } else {
         return (
-          <img width={100} height={100} src={'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png'} />
+          <img style={{width: '100px', height: '100px'}} src={'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png'} />
         )
       }
     },
@@ -49,19 +49,19 @@ const columns = [
     title: 'Type',
     dataIndex: 'types',
     sorter: true,
-    render: types => `${types ? types.map(a => a.type.name) : ''}`,
+    render: types => !types ? <Spin /> : `${types.map(a => a.type.name)}`,
     width: '25%',
   },
   {
     title: 'Stats',
     dataIndex: 'stats',
     sorter: true,
-    render: stats => <PokemonStats stats={stats} />,
+    render: stats => !stats ? <Spin /> : <PokemonStats stats={stats} />,
     width: '25%',
   }
 ];
 
-export function Pokemons({ data, loading, paginationRedux, onQuery }) {
+export function Pokemons({ data, loading, paginationRedux, onQuery, onQuerySpecific }) {
   useInjectReducer({ key: 'pokemons', reducer });
   useInjectSaga({ key: 'pokemons', saga });
 
@@ -69,19 +69,9 @@ export function Pokemons({ data, loading, paginationRedux, onQuery }) {
     fetch()
   }, [])
 
-  const handleTableChange = (pagination, filters, sorter, onQuery) => {
-    // const pager = { ...paginationRedux };
-
-    // pager.current = pagination.current;
-    // // setPagination(pager);
-
-    // fetch({
-    //   results: pagination.pageSize,
-    //   page: pagination.current,
-    //   sortField: sorter.field,
-    //   sortOrder: sorter.order,
-    //   ...filters,
-    // });
+  const handleTableChange = (pagination, filters, sorter, lists) => {
+    const pageSize = (pagination.current - 1) * pagination.pageSize
+    onQuerySpecific(lists.currentDataSource.slice(pageSize, pageSize + 10))
   };
 
   const fetch = (params = {}) => {
@@ -96,7 +86,7 @@ export function Pokemons({ data, loading, paginationRedux, onQuery }) {
       dataSource={data}
       // pagination={paginationRedux}
       loading={loading}
-      // onChange={handleTableChange}
+      onChange={handleTableChange}
        onRow={(record, rowIndex) => {
         return {
           onClick: event => {
@@ -109,7 +99,7 @@ export function Pokemons({ data, loading, paginationRedux, onQuery }) {
 }
 
 Pokemons.propTypes = {
-  // dispatch: PropTypes.func.isRequired,
+
 };
 
 const mapStateToProps = (state) => {
@@ -122,7 +112,8 @@ const mapStateToProps = (state) => {
 
 function mapDispatchToProps(dispatch) {
   return {
-    onQuery: (data) => dispatch(queryPokemon(data))
+    onQuery: (data) => dispatch(queryPokemon(data)),
+    onQuerySpecific: (data) => dispatch(querySpecificPokemon(data))
   };
 }
 

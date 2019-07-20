@@ -27,10 +27,10 @@ export function queryPokemonFailure(data) {
   };
 }
 
-export function querySpecificPokemon(name) {
+export function querySpecificPokemon(pokemon) {
   return {
     type: QUERY_SPECIFIC_POKEMON,
-    name
+    pokemon
   };
 }
 

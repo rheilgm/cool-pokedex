@@ -31,13 +31,25 @@ const pokemonsReducer = (state = initialState, action) =>
         break;
 
       case QUERY_SPECIFIC_POKEMON_SUCCESS:
-        let uPokemons = [...state.pokemons]
-        const pokemon = uPokemons.map(a => a.name).indexOf(action.data.name)
+        if (action.data.length) {
+          let arr1 = [...state.pokemons]
+          let arr2 = [...action.data.map(a => a.data)]
+          const final = arr1.map(itm => ({
+            ...arr2.find((item) => (item.name === itm.name) && item),
+            ...itm
+          }))
 
-        if (pokemon > -1) {
-          uPokemons[pokemon] = action.data
-          draft.pokemons = uPokemons
+          draft.pokemons = final
+        } else {
+          let uPokemons = [...state.pokemons]
+          const pokemon = uPokemons.map(a => a.name).indexOf(action.data.name)
+
+          if (pokemon > -1) {
+            uPokemons[pokemon] = action.data
+            draft.pokemons = uPokemons
+          }
         }
+
         break;
     }
   });
